@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
+import jsPDF from 'jspdf'
+import 'jspdf-autotable'
 import './App.css'
 
 function App() {
-  const [utiles, setUtiles] = useState([]) // Aquí guardamos la lista de útiles
+  const [utiles, setUtiles] = useState([])
   const [nuevoUtil, setNuevoUtil] = useState({
     nombre: '',
     categoria: '',
@@ -12,7 +14,6 @@ function App() {
     precio_venta: ''
   })
 
-  // 1. Cargar inventario al iniciar
   useEffect(() => {
     fetchInventario()
   }, [])
@@ -21,13 +22,11 @@ function App() {
     const { data, error } = await supabase
       .from('inventario_utiles')
       .select('*')
-      .order('id', { ascending: false }) // Los más nuevos primero
-
+      .order('id', { ascending: false })
     if (error) console.log('Error cargando:', error)
     else setUtiles(data)
   }
 
-  // 2. Manejar cambios en el formulario
   function handleChange(e) {
     setNuevoUtil({
       ...nuevoUtil,
@@ -35,11 +34,8 @@ function App() {
     })
   }
 
-  // 3. Guardar en Supabase
   async function handleSubmit(e) {
     e.preventDefault()
-    
-    // Validación simple
     if (!nuevoUtil.nombre || !nuevoUtil.stock) {
       alert("El nombre y el stock son obligatorios")
       return
@@ -59,17 +55,43 @@ function App() {
       alert('Error guardando: ' + error.message)
     } else {
       alert('¡Útil registrado exitosamente!')
-      fetchInventario() // Recargar la lista
-      // Limpiar formulario
+      fetchInventario()
       setNuevoUtil({ nombre: '', categoria: '', stock: '', ubicacion: '', precio_venta: '' })
     }
+  }
+
+  // --- NUEVA FUNCIÓN: Generar PDF ---
+  function exportarPDF() {
+    const doc = new jsPDF()
+    
+    // Título del PDF
+    doc.text("Reporte de Inventario - Útiles", 20, 10)
+
+    // Configuración de la tabla
+    const columnas = ["Nombre", "Categoría", "Ubicación", "Stock", "Precio"]
+    const filas = utiles.map(item => [
+      item.nombre,
+      item.categoria,
+      item.ubicacion,
+      item.stock,
+      `S/. ${item.precio_venta}`
+    ])
+
+    // Generar tabla automática
+    doc.autoTable({
+      head: [columnas],
+      body: filas,
+      startY: 20, // Empieza un poco más abajo del título
+    })
+
+    // Descargar archivo
+    doc.save("reporte_inventario.pdf")
   }
 
   return (
     <div className="container">
       <h1>📚 Inventario de Útiles</h1>
 
-      {/* Formulario de Registro */}
       <div className="form-card">
         <h3>Agregar Nuevo Producto</h3>
         <form onSubmit={handleSubmit}>
@@ -127,7 +149,23 @@ function App() {
         </form>
       </div>
 
-      {/* Tabla de Resultados */}
+      {/* Cabecera de la tabla con botón de descarga */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '30px' }}>
+        <h3>Listado Actual</h3>
+        {utiles.length > 0 && (
+          <button 
+            onClick={exportarPDF}
+            style={{ 
+              backgroundColor: '#28a745', 
+              width: 'auto', 
+              padding: '10px 15px' 
+            }}
+          >
+            📄 Descargar PDF
+          </button>
+        )}
+      </div>
+
       <table>
         <thead>
           <tr>
