@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
-import jsPDF from 'jspdf'
+import { jsPDF } from 'jspdf'
 import 'jspdf-autotable'
 import './App.css'
 
@@ -61,31 +61,38 @@ function App() {
   }
 
   // --- NUEVA FUNCIÓN: Generar PDF ---
+  // --- FUNCIÓN CORREGIDA Y MEJORADA ---
   function exportarPDF() {
-    const doc = new jsPDF()
-    
-    // Título del PDF
-    doc.text("Reporte de Inventario - Útiles", 20, 10)
-
-    // Configuración de la tabla
-    const columnas = ["Nombre", "Categoría", "Ubicación", "Stock", "Precio"]
-    const filas = utiles.map(item => [
-      item.nombre,
-      item.categoria,
-      item.ubicacion,
-      item.stock,
-      `S/. ${item.precio_venta}`
-    ])
-
-    // Generar tabla automática
-    doc.autoTable({
-      head: [columnas],
-      body: filas,
-      startY: 20, // Empieza un poco más abajo del título
-    })
-
-    // Descargar archivo
-    doc.save("reporte_inventario.pdf")
+    try {
+      const doc = new jsPDF()
+      
+      // Título del PDF
+      doc.text("Reporte de Inventario - Útiles", 20, 10)
+  
+      // Configuración de la tabla
+      const columnas = ["Nombre", "Categoría", "Ubicación", "Stock", "Precio"]
+      const filas = utiles.map(item => [
+        item.nombre,
+        item.categoria,
+        item.ubicacion,
+        item.stock,
+        `S/. ${item.precio_venta}`
+      ])
+  
+      // Generar tabla automática
+      doc.autoTable({
+        head: [columnas],
+        body: filas,
+        startY: 20,
+      })
+  
+      // Descargar archivo
+      doc.save("reporte_inventario.pdf")
+      
+    } catch (error) {
+      console.error("Error al generar PDF:", error)
+      alert("Hubo un error al generar el PDF. Revisa la consola (F12).")
+    }
   }
 
   return (
