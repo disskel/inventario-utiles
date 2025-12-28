@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 import { jsPDF } from 'jspdf'
-import 'jspdf-autotable'
+import autoTable from 'jspdf-autotable' // <--- Importamos la función directamente
 import './App.css'
 
 function App() {
@@ -66,10 +66,8 @@ function App() {
     try {
       const doc = new jsPDF()
       
-      // Título del PDF
       doc.text("Reporte de Inventario - Útiles", 20, 10)
   
-      // Configuración de la tabla
       const columnas = ["Nombre", "Categoría", "Ubicación", "Stock", "Precio"]
       const filas = utiles.map(item => [
         item.nombre,
@@ -79,14 +77,14 @@ function App() {
         `S/. ${item.precio_venta}`
       ])
   
-      // Generar tabla automática
-      doc.autoTable({
+      // CAMBIO CLAVE AQUÍ:
+      // Usamos la función importada y le pasamos el 'doc' como primer parámetro
+      autoTable(doc, {
         head: [columnas],
         body: filas,
         startY: 20,
       })
   
-      // Descargar archivo
       doc.save("reporte_inventario.pdf")
       
     } catch (error) {
